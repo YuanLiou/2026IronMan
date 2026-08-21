@@ -16,6 +16,7 @@ local.properties
 
 # Folder
 .idea/
+ai-knowledge/
 
 *.class
 *.log
