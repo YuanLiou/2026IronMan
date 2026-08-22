@@ -55,7 +55,7 @@ fun PhotoDiaryApp() {
     } else {
         DiaryList(
             entries = entries,
-            onAddClick = {}
+            onAddClick = { isAddingDiary = true }
         )
     }
 }
