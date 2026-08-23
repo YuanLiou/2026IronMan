@@ -42,8 +42,8 @@ fun PhotoDiaryApp() {
                 entries = listOf(
                     DiaryEntry(
                         photoResId = R.drawable.diary_default,
-                        title = note,
-                        note = title,
+                        title = title,
+                        note = note,
                         mood = "平靜",
                         createdAt = LocalDateTime.now()
                     )
