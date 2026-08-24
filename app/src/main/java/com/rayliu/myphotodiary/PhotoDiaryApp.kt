@@ -39,15 +39,14 @@ fun PhotoDiaryApp() {
     if (isAddingDiary) {
         DiaryForm(
             onSave = { title, note ->
-                entries = listOf(
-                    DiaryEntry(
-                        photoResId = R.drawable.diary_default,
-                        title = title,
-                        note = note,
-                        mood = "平靜",
-                        createdAt = LocalDateTime.now()
-                    )
-                ) + entries
+                val newEntry = DiaryEntry(
+                    photoResId = R.drawable.diary_default,
+                    title = title,
+                    note = note,
+                    mood = "平靜",
+                    createdAt = LocalDateTime.now()
+                )
+                entries = listOf(newEntry) + entries
                 isAddingDiary = false
             },
             onCancel = { isAddingDiary = false }
