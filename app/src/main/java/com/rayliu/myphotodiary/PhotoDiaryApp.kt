@@ -35,26 +35,39 @@ import java.time.format.DateTimeFormatter
 fun PhotoDiaryApp() {
     var entries by remember { mutableStateOf(sampleEntries()) }
     var isAddingDiary by remember { mutableStateOf(false) }
+    var validationError by remember { mutableStateOf<String?>(null) }
 
     if (isAddingDiary) {
         DiaryForm(
+            validationError = validationError,
             onSave = { title, note ->
-                val newEntry = DiaryEntry(
-                    photoResId = R.drawable.diary_default,
-                    title = title,
-                    note = note,
-                    mood = "平靜",
-                    createdAt = LocalDateTime.now()
-                )
-                entries = listOf(newEntry) + entries
-                isAddingDiary = false
+                if (title.isBlank() && note.isBlank()) {
+                    validationError = "請至少填寫標題或內容"
+                } else {
+                    validationError = null
+                    val newEntry = DiaryEntry(
+                        photoResId = R.drawable.diary_default,
+                        title = title,
+                        note = note,
+                        mood = "平靜",
+                        createdAt = LocalDateTime.now()
+                    )
+                    entries = listOf(newEntry) + entries
+                    isAddingDiary = false
+                }
             },
-            onCancel = { isAddingDiary = false }
+            onCancel = {
+                validationError = null
+                isAddingDiary = false
+            }
         )
     } else {
         DiaryList(
             entries = entries,
-            onAddClick = { isAddingDiary = true }
+            onAddClick = {
+                validationError = null
+                isAddingDiary = true
+            }
         )
     }
 }
@@ -125,6 +138,7 @@ private fun DiaryCard(entry: DiaryEntry) {
 
 @Composable
 private fun DiaryForm(
+    validationError: String?,
     onSave: (String, String) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -156,6 +170,12 @@ private fun DiaryForm(
             minLines = 4,
             modifier = Modifier.fillMaxWidth()
         )
+        validationError?.let { errorMessage ->
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(onClick = { onSave(title, note) }) {
                 Text(text = "儲存")
