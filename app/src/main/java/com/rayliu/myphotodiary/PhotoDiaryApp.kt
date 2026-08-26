@@ -20,54 +20,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import java.time.LocalDateTime
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun PhotoDiaryApp() {
-    var entries by remember { mutableStateOf(sampleEntries()) }
-    var isAddingDiary by remember { mutableStateOf(false) }
-    var validationError by remember { mutableStateOf<String?>(null) }
-
-    if (isAddingDiary) {
+fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
+    if (viewModel.isAddingDiary) {
         DiaryForm(
-            validationError = validationError,
-            onSave = { title, note ->
-                if (title.isBlank() && note.isBlank()) {
-                    validationError = "請至少填寫標題或內容"
-                } else {
-                    validationError = null
-                    val newEntry = DiaryEntry(
-                        photoResId = R.drawable.diary_default,
-                        title = title,
-                        note = note,
-                        mood = "平靜",
-                        createdAt = LocalDateTime.now()
-                    )
-                    entries = listOf(newEntry) + entries
-                    isAddingDiary = false
-                }
-            },
-            onCancel = {
-                validationError = null
-                isAddingDiary = false
-            }
+            title = viewModel.title,
+            note = viewModel.note,
+            validationError = viewModel.validationError,
+            onTitleChange = viewModel::updateTitle,
+            onNoteChange = viewModel::updateNote,
+            onSave = viewModel::saveDiary,
+            onCancel = viewModel::cancelAddingDiary
         )
     } else {
         DiaryList(
-            entries = entries,
-            onAddClick = {
-                validationError = null
-                isAddingDiary = true
-            }
+            entries = viewModel.entries,
+            onAddClick = viewModel::startAddingDiary
         )
     }
 }
@@ -138,13 +113,14 @@ private fun DiaryCard(entry: DiaryEntry) {
 
 @Composable
 private fun DiaryForm(
+    title: String,
+    note: String,
     validationError: String?,
+    onTitleChange: (String) -> Unit,
+    onNoteChange: (String) -> Unit,
     onSave: (String, String) -> Unit,
     onCancel: () -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -159,13 +135,13 @@ private fun DiaryForm(
         )
         OutlinedTextField(
             value = title,
-            onValueChange = { title = it },
+            onValueChange = onTitleChange,
             label = { Text(text = "標題") },
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = note,
-            onValueChange = { note = it },
+            onValueChange = onNoteChange,
             label = { Text(text = "內容") },
             minLines = 4,
             modifier = Modifier.fillMaxWidth()
@@ -188,27 +164,3 @@ private fun DiaryForm(
 }
 
 private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
-private fun sampleEntries(): List<DiaryEntry> = listOf(
-    DiaryEntry(
-        photoResId = R.drawable.diary_example001,
-        title = "城市縮影裡的警醒",
-        note = "看見熟悉的城市被做成防災模型，才發現準備不能只停在想像。",
-        mood = "震撼",
-        createdAt = LocalDateTime.parse("2026-03-10T17:52:37")
-    ),
-    DiaryEntry(
-        photoResId = R.drawable.diary_example002,
-        title = "夜裡的共享空間",
-        note = "雨夜裡留下來整理想法，空間安靜得剛剛好。",
-        mood = "專注",
-        createdAt = LocalDateTime.parse("2026-04-04T21:04:51")
-    ),
-    DiaryEntry(
-        photoResId = R.drawable.diary_example003,
-        title = "山海之間的晴天",
-        note = "站在高處看著海岸線，雲和海把心情慢慢拉開。",
-        mood = "平靜",
-        createdAt = LocalDateTime.parse("2026-01-04T11:23:44")
-    )
-)
