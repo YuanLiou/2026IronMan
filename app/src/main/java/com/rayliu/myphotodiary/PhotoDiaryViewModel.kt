@@ -21,6 +21,9 @@ class PhotoDiaryViewModel : ViewModel() {
     var validationError by mutableStateOf<String?>(null)
         private set
 
+    var isNewestFirst by mutableStateOf(false)
+        private set
+
     fun startAddingDiary() {
         clearForm()
         isAddingDiary = true
@@ -60,6 +63,17 @@ class PhotoDiaryViewModel : ViewModel() {
         val updatedEntries = entries.toMutableList()
         updatedEntries.removeAt(displayIndex)
         entries = updatedEntries
+    }
+
+    fun toggleSortOrder() {
+        isNewestFirst = !isNewestFirst
+    }
+
+    fun getDisplayEntries(): List<DiaryEntry> {
+        if (isNewestFirst) {
+            return entries.sortedByDescending { diaryEntry -> diaryEntry.createdAt }
+        }
+        return entries
     }
 
     private fun clearForm() {

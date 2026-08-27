@@ -41,9 +41,11 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
         )
     } else {
         DiaryList(
-            entries = viewModel.entries,
+            entries = viewModel.getDisplayEntries(),
             onAddClick = viewModel::startAddingDiary,
-            onDeleteDiary = { displayIndex -> viewModel.deleteDiaryAt(displayIndex) }
+            onDeleteDiary = { displayIndex -> viewModel.deleteDiaryAt(displayIndex) },
+            isNewestFirst = viewModel.isNewestFirst,
+            onToggleSortOrder = { viewModel.toggleSortOrder() }
         )
     }
 }
@@ -52,7 +54,9 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
 private fun DiaryList(
     entries: List<DiaryEntry>,
     onAddClick: () -> Unit,
-    onDeleteDiary: (Int) -> Unit
+    onDeleteDiary: (Int) -> Unit,
+    isNewestFirst: Boolean,
+    onToggleSortOrder: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -71,6 +75,17 @@ private fun DiaryList(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "新增日記")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = { onToggleSortOrder() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (isNewestFirst) {
+                Text(text = "目前：最新在前（切換為原始順序）")
+            } else {
+                Text(text = "目前：原始順序（切換為最新在前）")
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
         LazyColumn(
