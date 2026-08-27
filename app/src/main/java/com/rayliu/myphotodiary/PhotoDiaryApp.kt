@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +42,8 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
     } else {
         DiaryList(
             entries = viewModel.entries,
-            onAddClick = viewModel::startAddingDiary
+            onAddClick = viewModel::startAddingDiary,
+            onDeleteDiary = { displayIndex -> viewModel.deleteDiaryAt(displayIndex) }
         )
     }
 }
@@ -50,7 +51,8 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
 @Composable
 private fun DiaryList(
     entries: List<DiaryEntry>,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
+    onDeleteDiary: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -75,15 +77,21 @@ private fun DiaryList(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(entries) { entry ->
-                DiaryCard(entry = entry)
+            itemsIndexed(entries) { displayIndex, diaryEntry ->
+                DiaryCard(
+                    entry = diaryEntry,
+                    onDeleteClick = { onDeleteDiary(displayIndex) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun DiaryCard(entry: DiaryEntry) {
+private fun DiaryCard(
+    entry: DiaryEntry,
+    onDeleteClick: () -> Unit
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column {
             Image(
@@ -105,6 +113,10 @@ private fun DiaryCard(entry: DiaryEntry) {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(text = "心情：${entry.mood}")
                     Text(text = "建立時間：${entry.createdAt.format(displayDateTimeFormatter)}")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(onClick = { onDeleteClick() }) {
+                    Text(text = "刪除")
                 }
             }
         }

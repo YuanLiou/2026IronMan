@@ -56,6 +56,12 @@ class PhotoDiaryViewModel : ViewModel() {
         isAddingDiary = false
     }
 
+    fun deleteDiaryAt(displayIndex: Int) {
+        val updatedEntries = entries.toMutableList()
+        updatedEntries.removeAt(displayIndex)
+        entries = updatedEntries
+    }
+
     private fun clearForm() {
         title = ""
         note = ""
