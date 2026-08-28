@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +43,7 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
         DiaryList(
             entries = viewModel.getDisplayEntries(),
             onAddClick = viewModel::startAddingDiary,
-            onDeleteDiary = { displayIndex -> viewModel.deleteDiaryAt(displayIndex) },
+            onDeleteDiary = { id -> viewModel.deleteDiary(id) },
             isNewestFirst = viewModel.isNewestFirst,
             onToggleSortOrder = { viewModel.toggleSortOrder() }
         )
@@ -54,7 +54,7 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
 private fun DiaryList(
     entries: List<DiaryEntry>,
     onAddClick: () -> Unit,
-    onDeleteDiary: (Int) -> Unit,
+    onDeleteDiary: (String) -> Unit,
     isNewestFirst: Boolean,
     onToggleSortOrder: () -> Unit
 ) {
@@ -92,10 +92,10 @@ private fun DiaryList(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            itemsIndexed(entries) { displayIndex, diaryEntry ->
+            items(entries) { diaryEntry ->
                 DiaryCard(
                     entry = diaryEntry,
-                    onDeleteClick = { onDeleteDiary(displayIndex) }
+                    onDeleteClick = { onDeleteDiary(diaryEntry.id) }
                 )
             }
         }

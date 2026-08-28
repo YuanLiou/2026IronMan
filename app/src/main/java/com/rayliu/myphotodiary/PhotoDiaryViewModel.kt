@@ -59,9 +59,9 @@ class PhotoDiaryViewModel : ViewModel() {
         isAddingDiary = false
     }
 
-    fun deleteDiaryAt(displayIndex: Int) {
+    fun deleteDiary(id: String) {
         val updatedEntries = entries.toMutableList()
-        updatedEntries.removeAt(displayIndex)
+        updatedEntries.removeIf { diaryEntry -> diaryEntry.id == id }
         entries = updatedEntries
     }
 
