@@ -3,10 +3,13 @@ package com.rayliu.myphotodiary
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import java.time.LocalDateTime
 
-class PhotoDiaryViewModel : ViewModel() {
+class PhotoDiaryViewModel(application: Application) : AndroidViewModel(application) {
+    private val storage = LocalDiaryStorage(application.applicationContext)
+
     var entries by mutableStateOf(sampleEntries())
 
     var isAddingDiary by mutableStateOf(false)
@@ -49,6 +52,7 @@ class PhotoDiaryViewModel : ViewModel() {
                 createdAt = LocalDateTime.now()
             )
             entries = listOf(newEntry) + entries
+            storage.save(entries)
             clearForm()
             isAddingDiary = false
         }
@@ -61,8 +65,11 @@ class PhotoDiaryViewModel : ViewModel() {
 
     fun deleteDiary(id: String) {
         val updatedEntries = entries.toMutableList()
-        updatedEntries.removeIf { diaryEntry -> diaryEntry.id == id }
+        val wasDeleted = updatedEntries.removeIf { diaryEntry -> diaryEntry.id == id }
         entries = updatedEntries
+        if (wasDeleted) {
+            storage.save(entries)
+        }
     }
 
     fun toggleSortOrder() {
