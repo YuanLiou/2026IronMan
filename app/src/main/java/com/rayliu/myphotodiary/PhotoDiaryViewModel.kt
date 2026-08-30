@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 class PhotoDiaryViewModel(application: Application) : AndroidViewModel(application) {
     private val storage = LocalDiaryStorage(application.applicationContext)
 
-    var entries by mutableStateOf(sampleEntries())
+    var entries by mutableStateOf(loadInitialEntries())
 
     var isAddingDiary by mutableStateOf(false)
         private set
@@ -87,6 +87,14 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
         title = ""
         note = ""
         validationError = null
+    }
+
+    private fun loadInitialEntries(): List<DiaryEntry> {
+        val loadedEntries = storage.load()
+        if (loadedEntries == null) {
+            return sampleEntries()
+        }
+        return loadedEntries
     }
 }
 
