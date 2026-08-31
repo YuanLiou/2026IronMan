@@ -15,7 +15,14 @@ class LocalDiaryStorage(context: Context) {
         for (entry in entries) {
             val jsonObject = JSONObject()
             jsonObject.put("id", entry.id)
-            jsonObject.put("photoResId", entry.photoResId)
+            val photoObject = JSONObject()
+            when (val photo = entry.photo) {
+                is DiaryPhoto.BuiltIn -> {
+                    photoObject.put("type", "builtIn")
+                    photoObject.put("resourceId", photo.resourceId)
+                }
+            }
+            jsonObject.put("photo", photoObject)
             jsonObject.put("title", entry.title)
             jsonObject.put("note", entry.note)
             jsonObject.put("mood", entry.mood)
@@ -36,9 +43,21 @@ class LocalDiaryStorage(context: Context) {
 
         for (index in 0 until jsonArray.length()) {
             val jsonObject = jsonArray.getJSONObject(index)
+            val photo: DiaryPhoto
+            if (jsonObject.has("photoResId")) {
+                photo = DiaryPhoto.BuiltIn(jsonObject.getInt("photoResId"))
+            } else {
+                val photoObject = jsonObject.getJSONObject("photo")
+                val photoType = photoObject.getString("type")
+                if (photoType == "builtIn") {
+                    photo = DiaryPhoto.BuiltIn(photoObject.getInt("resourceId"))
+                } else {
+                    throw IllegalArgumentException("Unsupported diary photo type: $photoType")
+                }
+            }
             val entry = DiaryEntry(
                 id = jsonObject.getString("id"),
-                photoResId = jsonObject.getInt("photoResId"),
+                photo = photo,
                 title = jsonObject.getString("title"),
                 note = jsonObject.getString("note"),
                 mood = jsonObject.getString("mood"),

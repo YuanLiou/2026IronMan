@@ -109,14 +109,18 @@ private fun DiaryCard(
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column {
-            Image(
-                painter = painterResource(id = entry.photoResId),
-                contentDescription = entry.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-            )
+            when (val photo = entry.photo) {
+                is DiaryPhoto.BuiltIn -> {
+                    Image(
+                        painter = painterResource(id = photo.resourceId),
+                        contentDescription = entry.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f)
+                    )
+                }
+            }
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = entry.title,
