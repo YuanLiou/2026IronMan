@@ -21,6 +21,11 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
     var note by mutableStateOf("")
         private set
 
+    var draftPhoto by mutableStateOf<DiaryPhoto>(
+        DiaryPhoto.BuiltIn(R.drawable.diary_default)
+    )
+        private set
+
     var validationError by mutableStateOf<String?>(null)
         private set
 
@@ -40,12 +45,18 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
         this.note = note
     }
 
+    fun selectExternalPhoto(uriString: String) {
+        if (uriString.isNotBlank()) {
+            draftPhoto = DiaryPhoto.ExternalReference(uriString)
+        }
+    }
+
     fun saveDiary(title: String, note: String) {
         if (title.isBlank() && note.isBlank()) {
             validationError = "請至少填寫標題或內容"
         } else {
             val newEntry = DiaryEntry(
-                photo = DiaryPhoto.BuiltIn(R.drawable.diary_default),
+                photo = draftPhoto,
                 title = title,
                 note = note,
                 mood = "平靜",
@@ -87,6 +98,7 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
         title = ""
         note = ""
         validationError = null
+        draftPhoto = DiaryPhoto.BuiltIn(R.drawable.diary_default)
     }
 
     private fun loadInitialEntries(): List<DiaryEntry> {

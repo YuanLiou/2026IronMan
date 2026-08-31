@@ -1,5 +1,11 @@
 package com.rayliu.myphotodiary
 
+import android.net.Uri
+import android.graphics.BitmapFactory
+import android.widget.ImageView
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,20 +30,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import java.io.FileNotFoundException
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { selectedUri ->
+            if (selectedUri != null) {
+                viewModel.selectExternalPhoto(selectedUri.toString())
+            }
+        }
+    )
+
     if (viewModel.isAddingDiary) {
         DiaryForm(
             title = viewModel.title,
             note = viewModel.note,
+            photo = viewModel.draftPhoto,
             validationError = viewModel.validationError,
             onTitleChange = viewModel::updateTitle,
             onNoteChange = viewModel::updateNote,
             onSave = viewModel::saveDiary,
-            onCancel = viewModel::cancelAddingDiary
+            onCancel = viewModel::cancelAddingDiary,
+            onChoosePhoto = {
+                photoPickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            }
         )
     } else {
         DiaryList(
@@ -109,18 +132,13 @@ private fun DiaryCard(
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column {
-            when (val photo = entry.photo) {
-                is DiaryPhoto.BuiltIn -> {
-                    Image(
-                        painter = painterResource(id = photo.resourceId),
-                        contentDescription = entry.title,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16f / 9f)
-                    )
-                }
-            }
+            DiaryPhotoImage(
+                photo = entry.photo,
+                contentDescription = entry.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+            )
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = entry.title,
@@ -146,11 +164,13 @@ private fun DiaryCard(
 private fun DiaryForm(
     title: String,
     note: String,
+    photo: DiaryPhoto,
     validationError: String?,
     onTitleChange: (String) -> Unit,
     onNoteChange: (String) -> Unit,
     onSave: (String, String) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onChoosePhoto: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -164,6 +184,16 @@ private fun DiaryForm(
             text = "新增日記",
             style = MaterialTheme.typography.headlineMedium
         )
+        DiaryPhotoImage(
+            photo = photo,
+            contentDescription = "目前選取的照片",
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+        )
+        Button(onClick = { onChoosePhoto() }) {
+            Text(text = "選擇照片")
+        }
         OutlinedTextField(
             value = title,
             onValueChange = onTitleChange,
@@ -192,6 +222,61 @@ private fun DiaryForm(
             }
         }
     }
+}
+
+@Composable
+private fun DiaryPhotoImage(
+    photo: DiaryPhoto,
+    contentDescription: String,
+    modifier: Modifier
+) {
+    when (photo) {
+        is DiaryPhoto.BuiltIn -> {
+            Image(
+                painter = painterResource(id = photo.resourceId),
+                contentDescription = contentDescription,
+                contentScale = ContentScale.Crop,
+                modifier = modifier
+            )
+        }
+        is DiaryPhoto.ExternalReference -> {
+            ExternalPhotoImage(
+                uriString = photo.uriString,
+                contentDescription = contentDescription,
+                modifier = modifier
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExternalPhotoImage(
+    uriString: String,
+    contentDescription: String,
+    modifier: Modifier
+) {
+    AndroidView(
+        factory = { context ->
+            ImageView(context)
+        },
+        update = { imageView ->
+            imageView.contentDescription = contentDescription
+            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+            // URI 只是一條外部路徑，先嘗試把它讀成 Bitmap。
+            val bitmap = try {
+                imageView.context.contentResolver
+                    .openInputStream(Uri.parse(uriString))
+                    ?.use(BitmapFactory::decodeStream)
+            } catch (_: SecurityException) {
+                null
+            } catch (_: FileNotFoundException) {
+                null
+            }
+            // URI 失效時回傳 null，讓畫面留白而不讓 App crash；不持久化權限、不複製檔案，也不補預設圖。
+            imageView.setImageBitmap(bitmap)
+        },
+        modifier = modifier
+    )
 }
 
 private val displayDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")

@@ -21,6 +21,10 @@ class LocalDiaryStorage(context: Context) {
                     photoObject.put("type", "builtIn")
                     photoObject.put("resourceId", photo.resourceId)
                 }
+                is DiaryPhoto.ExternalReference -> {
+                    photoObject.put("type", "externalReference")
+                    photoObject.put("uriString", photo.uriString)
+                }
             }
             jsonObject.put("photo", photoObject)
             jsonObject.put("title", entry.title)
@@ -51,6 +55,8 @@ class LocalDiaryStorage(context: Context) {
                 val photoType = photoObject.getString("type")
                 if (photoType == "builtIn") {
                     photo = DiaryPhoto.BuiltIn(photoObject.getInt("resourceId"))
+                } else if (photoType == "externalReference") {
+                    photo = DiaryPhoto.ExternalReference(photoObject.getString("uriString"))
                 } else {
                     throw IllegalArgumentException("Unsupported diary photo type: $photoType")
                 }
