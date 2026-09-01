@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -275,7 +276,7 @@ private fun ExternalPhotoImage(
             // URI 失效時回傳 null，讓畫面留白而不讓 App crash；不持久化權限、不複製檔案，也不補預設圖。
             imageView.setImageBitmap(bitmap)
         },
-        modifier = modifier
+        modifier = modifier.clipToBounds()
     )
 }
 
