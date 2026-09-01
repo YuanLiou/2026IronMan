@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 
 class PhotoDiaryViewModel(application: Application) : AndroidViewModel(application) {
     private val storage = LocalDiaryStorage(application.applicationContext)
+    private val photoStore = LocalPhotoStore(application.applicationContext)
 
     var entries by mutableStateOf(loadInitialEntries())
 
@@ -62,7 +63,21 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
                 mood = "平靜",
                 createdAt = LocalDateTime.now()
             )
-            entries = listOf(newEntry) + entries
+            val entryToSave: DiaryEntry
+            if (newEntry.photo is DiaryPhoto.ExternalReference) {
+                val externalReference = newEntry.photo as DiaryPhoto.ExternalReference
+                val ownedFile = try {
+                    photoStore.import(externalReference, newEntry.id)
+                } catch (_: SecurityException) {
+                    return
+                } catch (_: java.io.FileNotFoundException) {
+                    return
+                }
+                entryToSave = newEntry.copy(photo = ownedFile)
+            } else {
+                entryToSave = newEntry
+            }
+            entries = listOf(entryToSave) + entries
             storage.save(entries)
             clearForm()
             isAddingDiary = false

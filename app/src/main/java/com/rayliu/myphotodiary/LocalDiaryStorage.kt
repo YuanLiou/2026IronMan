@@ -25,6 +25,10 @@ class LocalDiaryStorage(context: Context) {
                     photoObject.put("type", "externalReference")
                     photoObject.put("uriString", photo.uriString)
                 }
+                is DiaryPhoto.OwnedFile -> {
+                    photoObject.put("type", "ownedFile")
+                    photoObject.put("fileName", photo.fileName)
+                }
             }
             jsonObject.put("photo", photoObject)
             jsonObject.put("title", entry.title)
@@ -57,6 +61,8 @@ class LocalDiaryStorage(context: Context) {
                     photo = DiaryPhoto.BuiltIn(photoObject.getInt("resourceId"))
                 } else if (photoType == "externalReference") {
                     photo = DiaryPhoto.ExternalReference(photoObject.getString("uriString"))
+                } else if (photoType == "ownedFile") {
+                    photo = DiaryPhoto.OwnedFile(photoObject.getString("fileName"))
                 } else {
                     throw IllegalArgumentException("Unsupported diary photo type: $photoType")
                 }

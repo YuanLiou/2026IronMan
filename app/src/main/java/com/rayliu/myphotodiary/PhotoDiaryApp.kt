@@ -247,7 +247,42 @@ private fun DiaryPhotoImage(
                 modifier = modifier
             )
         }
+        is DiaryPhoto.OwnedFile -> {
+            OwnedPhotoImage(
+                fileName = photo.fileName,
+                contentDescription = contentDescription,
+                modifier = modifier
+            )
+        }
     }
+}
+
+@Composable
+private fun OwnedPhotoImage(
+    fileName: String,
+    contentDescription: String,
+    modifier: Modifier
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val photoStore = LocalPhotoStore(context)
+    AndroidView(
+        factory = { imageContext ->
+            ImageView(imageContext)
+        },
+        update = { imageView ->
+            imageView.contentDescription = contentDescription
+            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+            val ownedFile = DiaryPhoto.OwnedFile(fileName)
+            val inputStream = photoStore.open(ownedFile)
+            val bitmap = try {
+                BitmapFactory.decodeStream(inputStream)
+            } finally {
+                inputStream.close()
+            }
+            imageView.setImageBitmap(bitmap)
+        },
+        modifier = modifier.clipToBounds()
+    )
 }
 
 @Composable
