@@ -1,9 +1,15 @@
 package com.rayliu.myphotodiary
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import java.io.FileNotFoundException
-import java.io.InputStream
+
+sealed class PhotoReadResult {
+    data class Available(val bitmap: Bitmap) : PhotoReadResult()
+    class Unavailable : PhotoReadResult()
+}
 
 class LocalPhotoStore(context: Context) {
     private val photoDirectory = context.filesDir
@@ -27,7 +33,21 @@ class LocalPhotoStore(context: Context) {
         return DiaryPhoto.OwnedFile(fileName)
     }
 
-    fun open(ownedFile: DiaryPhoto.OwnedFile): InputStream {
-        return photoDirectory.resolve(ownedFile.fileName).inputStream()
+    fun open(ownedFile: DiaryPhoto.OwnedFile): PhotoReadResult {
+        val inputStream = try {
+            photoDirectory.resolve(ownedFile.fileName).inputStream()
+        } catch (_: FileNotFoundException) {
+            return PhotoReadResult.Unavailable()
+        }
+        val bitmap = try {
+            BitmapFactory.decodeStream(inputStream)
+        } finally {
+            inputStream.close()
+        }
+        return if (bitmap == null) {
+            PhotoReadResult.Unavailable()
+        } else {
+            PhotoReadResult.Available(bitmap)
+        }
     }
 }

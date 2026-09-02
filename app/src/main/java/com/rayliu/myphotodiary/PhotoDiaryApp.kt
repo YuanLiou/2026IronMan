@@ -8,6 +8,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -266,24 +268,30 @@ private fun OwnedPhotoImage(
 ) {
     val context = LocalContext.current
     val photoStore = LocalPhotoStore(context)
-    AndroidView(
-        factory = { imageContext ->
-            ImageView(imageContext)
-        },
-        update = { imageView ->
-            imageView.contentDescription = contentDescription
-            imageView.scaleType = ImageView.ScaleType.CENTER_CROP
-            val ownedFile = DiaryPhoto.OwnedFile(fileName)
-            val inputStream = photoStore.open(ownedFile)
-            val bitmap = try {
-                BitmapFactory.decodeStream(inputStream)
-            } finally {
-                inputStream.close()
+    val photoReadResult = photoStore.open(DiaryPhoto.OwnedFile(fileName))
+    when (photoReadResult) {
+        is PhotoReadResult.Available -> {
+            AndroidView(
+                factory = { imageContext ->
+                    ImageView(imageContext)
+                },
+                update = { imageView ->
+                    imageView.contentDescription = contentDescription
+                    imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+                    imageView.setImageBitmap(photoReadResult.bitmap)
+                },
+                modifier = modifier.clipToBounds()
+            )
+        }
+        is PhotoReadResult.Unavailable -> {
+            Box(
+                modifier = modifier.clipToBounds(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "照片暫時無法讀取")
             }
-            imageView.setImageBitmap(bitmap)
-        },
-        modifier = modifier.clipToBounds()
-    )
+        }
+    }
 }
 
 @Composable
