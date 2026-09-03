@@ -8,6 +8,7 @@ import java.io.FileNotFoundException
 
 sealed class PhotoReadResult {
     data class Available(val bitmap: Bitmap) : PhotoReadResult()
+    class MissingFile : PhotoReadResult()
     class Unavailable : PhotoReadResult()
 }
 
@@ -37,7 +38,7 @@ class LocalPhotoStore(context: Context) {
         val inputStream = try {
             photoDirectory.resolve(ownedFile.fileName).inputStream()
         } catch (_: FileNotFoundException) {
-            return PhotoReadResult.Unavailable()
+            return PhotoReadResult.MissingFile()
         }
         val bitmap = try {
             BitmapFactory.decodeStream(inputStream)

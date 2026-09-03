@@ -283,6 +283,14 @@ private fun OwnedPhotoImage(
                 modifier = modifier.clipToBounds()
             )
         }
+        is PhotoReadResult.MissingFile -> {
+            Box(
+                modifier = modifier.clipToBounds(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "照片檔案已遺失")
+            }
+        }
         is PhotoReadResult.Unavailable -> {
             Box(
                 modifier = modifier.clipToBounds(),
