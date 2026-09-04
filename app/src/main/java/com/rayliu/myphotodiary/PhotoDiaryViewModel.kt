@@ -53,13 +53,16 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun saveDiary(title: String, note: String) {
-        if (title.isBlank() && note.isBlank()) {
+        val normalizedTitle = title.trim()
+        val normalizedNote = note.trim()
+
+        if (normalizedTitle.isBlank() || normalizedNote.isBlank()) {
             validationError = "請至少填寫標題或內容"
         } else {
             val newEntry = DiaryEntry(
                 photo = draftPhoto,
-                title = title,
-                note = note,
+                title = normalizedTitle,
+                note = normalizedNote,
                 mood = "平靜",
                 createdAt = LocalDateTime.now()
             )
