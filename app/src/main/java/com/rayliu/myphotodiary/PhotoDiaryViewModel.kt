@@ -7,8 +7,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import java.time.LocalDateTime
 
-class PhotoDiaryViewModel(application: Application) : AndroidViewModel(application) {
-    private val storage = LocalDiaryStorage(application.applicationContext)
+class PhotoDiaryViewModel(
+    application: Application,
+    private val diaryStore: DiaryStore
+) : AndroidViewModel(application) {
     private val photoStore = LocalPhotoStore(application.applicationContext)
 
     var entries by mutableStateOf(loadInitialEntries())
@@ -81,7 +83,7 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
                 entryToSave = newEntry
             }
             entries = listOf(entryToSave) + entries
-            storage.save(entries)
+            diaryStore.save(entries)
             clearForm()
             isAddingDiary = false
         }
@@ -97,7 +99,7 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
         val wasDeleted = updatedEntries.removeIf { diaryEntry -> diaryEntry.id == id }
         entries = updatedEntries
         if (wasDeleted) {
-            storage.save(entries)
+            diaryStore.save(entries)
         }
     }
 
@@ -120,7 +122,7 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     private fun loadInitialEntries(): List<DiaryEntry> {
-        val loadedEntries = storage.load()
+        val loadedEntries = diaryStore.load()
         if (loadedEntries == null) {
             return sampleEntries()
         }

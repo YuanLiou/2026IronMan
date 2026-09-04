@@ -6,10 +6,10 @@ import org.json.JSONObject
 import java.io.File
 import java.time.LocalDateTime
 
-class LocalDiaryStorage(context: Context) {
+class LocalDiaryStorage(context: Context) : DiaryStore {
     private val diaryFile = File(context.filesDir, "diaries.json")
 
-    fun save(entries: List<DiaryEntry>) {
+    override fun save(entries: List<DiaryEntry>) {
         val jsonArray = JSONArray()
 
         for (entry in entries) {
@@ -41,7 +41,7 @@ class LocalDiaryStorage(context: Context) {
         diaryFile.writeText(jsonArray.toString())
     }
 
-    fun load(): List<DiaryEntry>? {
+    override fun load(): List<DiaryEntry>? {
         if (!diaryFile.exists()) {
             return null
         }

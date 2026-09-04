@@ -29,7 +29,7 @@ class PhotoDiaryViewModelTest {
     @Test
     fun bothBlank_doesNotAddDiary_andShowsValidationError() {
         // Given：建立日記狀態物件，並記錄目前已有幾篇日記
-        val viewModel = PhotoDiaryViewModel(application())
+        val viewModel = PhotoDiaryViewModel(application(), LocalDiaryStorage(application()))
         val initialEntryCount = viewModel.entries.size
 
         // When：從 public saveDiary 傳入兩個都只有空白的欄位
@@ -43,7 +43,7 @@ class PhotoDiaryViewModelTest {
     @Test
     fun titleOnly_trimsValues_andAddsDiary() {
         // Given：建立日記狀態物件，並記錄目前已有幾篇日記
-        val viewModel = PhotoDiaryViewModel(application())
+        val viewModel = PhotoDiaryViewModel(application(), LocalDiaryStorage(application()))
         val initialEntryCount = viewModel.entries.size
 
         // When：從 public saveDiary 傳入前後有空白的標題，內容只有空白
@@ -59,7 +59,7 @@ class PhotoDiaryViewModelTest {
     @Test
     fun noteOnly_trimsValues_andAddsDiary() {
         // Given：建立日記狀態物件，並記錄目前已有幾篇日記
-        val viewModel = PhotoDiaryViewModel(application())
+        val viewModel = PhotoDiaryViewModel(application(), LocalDiaryStorage(application()))
         val initialEntryCount = viewModel.entries.size
 
         // When：從 public saveDiary 傳入只有空白的標題與前後有空白的內容

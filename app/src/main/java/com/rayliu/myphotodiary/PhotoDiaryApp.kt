@@ -35,12 +35,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.viewmodel.compose.viewModel
 import java.io.FileNotFoundException
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel = viewModel()) {
+fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel) {
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { selectedUri ->
