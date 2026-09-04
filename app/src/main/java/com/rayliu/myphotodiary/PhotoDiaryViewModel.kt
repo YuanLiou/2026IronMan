@@ -56,7 +56,7 @@ class PhotoDiaryViewModel(application: Application) : AndroidViewModel(applicati
         val normalizedTitle = title.trim()
         val normalizedNote = note.trim()
 
-        if (normalizedTitle.isBlank() || normalizedNote.isBlank()) {
+        if (normalizedTitle.isBlank() && normalizedNote.isBlank()) {
             validationError = "請至少填寫標題或內容"
         } else {
             val newEntry = DiaryEntry(
