@@ -12,6 +12,7 @@ class PhotoDiaryViewModel(
     private val diaryStore: DiaryStore
 ) : AndroidViewModel(application) {
     private val photoStore = LocalPhotoStore(application.applicationContext)
+    private val diaryValidator = DiaryValidator()
 
     var entries by mutableStateOf(loadInitialEntries())
 
@@ -57,9 +58,10 @@ class PhotoDiaryViewModel(
     fun saveDiary(title: String, note: String) {
         val normalizedTitle = title.trim()
         val normalizedNote = note.trim()
+        val validationMessage = diaryValidator.validate(normalizedTitle, normalizedNote)
 
-        if (normalizedTitle.isBlank() && normalizedNote.isBlank()) {
-            validationError = "請至少填寫標題或內容"
+        if (validationMessage != null) {
+            validationError = validationMessage
         } else {
             val newEntry = DiaryEntry(
                 photo = draftPhoto,
