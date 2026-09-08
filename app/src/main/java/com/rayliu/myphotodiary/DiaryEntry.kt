@@ -8,6 +8,6 @@ data class DiaryEntry(
     val photo: DiaryPhoto,
     val title: String,
     val note: String,
-    val mood: String,
+    val mood: Mood,
     val createdAt: LocalDateTime
 )

@@ -67,7 +67,7 @@ class PhotoDiaryViewModel(
                 photo = draftPhoto,
                 title = normalizedTitle,
                 note = normalizedNote,
-                mood = "平靜",
+                mood = Mood.CALM,
                 createdAt = LocalDateTime.now()
             )
             val entryToSave: DiaryEntry
@@ -137,21 +137,21 @@ private fun sampleEntries(): List<DiaryEntry> = listOf(
         photo = DiaryPhoto.BuiltIn(R.drawable.diary_example001),
         title = "城市縮影裡的警醒",
         note = "看見熟悉的城市被做成防災模型，才發現準備不能只停在想像。",
-        mood = "震撼",
+        mood = Mood.IMPRESSED,
         createdAt = LocalDateTime.parse("2026-03-10T17:52:37")
     ),
     DiaryEntry(
         photo = DiaryPhoto.BuiltIn(R.drawable.diary_example002),
         title = "夜裡的共享空間",
         note = "雨夜裡留下來整理想法，空間安靜得剛剛好。",
-        mood = "專注",
+        mood = Mood.FOCUSED,
         createdAt = LocalDateTime.parse("2026-04-04T21:04:51")
     ),
     DiaryEntry(
         photo = DiaryPhoto.BuiltIn(R.drawable.diary_example003),
         title = "山海之間的晴天",
         note = "站在高處看著海岸線，雲和海把心情慢慢拉開。",
-        mood = "平靜",
+        mood = Mood.CALM,
         createdAt = LocalDateTime.parse("2026-01-04T11:23:44")
     )
 )

@@ -151,7 +151,7 @@ private fun DiaryCard(
                 Text(text = entry.note)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(text = "心情：${entry.mood}")
+                    Text(text = "心情：${entry.mood.displayName}")
                     Text(text = "建立時間：${entry.createdAt.format(displayDateTimeFormatter)}")
                 }
                 Spacer(modifier = Modifier.height(8.dp))

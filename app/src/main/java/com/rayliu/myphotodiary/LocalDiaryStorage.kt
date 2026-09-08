@@ -33,7 +33,7 @@ class LocalDiaryStorage(context: Context) : DiaryStore {
             jsonObject.put("photo", photoObject)
             jsonObject.put("title", entry.title)
             jsonObject.put("note", entry.note)
-            jsonObject.put("mood", entry.mood)
+            jsonObject.put("mood", entry.mood.displayName)
             jsonObject.put("createdAt", entry.createdAt.toString())
             jsonArray.put(jsonObject)
         }
@@ -67,12 +67,19 @@ class LocalDiaryStorage(context: Context) : DiaryStore {
                     throw IllegalArgumentException("Unsupported diary photo type: $photoType")
                 }
             }
+            val moodDisplayName = jsonObject.getString("mood")
+            val mood = when (moodDisplayName) {
+                "平靜" -> Mood.CALM
+                "專注" -> Mood.FOCUSED
+                "震撼" -> Mood.IMPRESSED
+                else -> throw IllegalArgumentException("Unsupported diary mood: $moodDisplayName")
+            }
             val entry = DiaryEntry(
                 id = jsonObject.getString("id"),
                 photo = photo,
                 title = jsonObject.getString("title"),
                 note = jsonObject.getString("note"),
-                mood = jsonObject.getString("mood"),
+                mood = mood,
                 createdAt = LocalDateTime.parse(jsonObject.getString("createdAt"))
             )
             entries.add(entry)
