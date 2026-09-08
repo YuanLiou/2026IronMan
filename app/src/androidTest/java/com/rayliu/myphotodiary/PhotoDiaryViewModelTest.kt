@@ -65,6 +65,21 @@ class PhotoDiaryViewModelTest {
     }
 
     @Test
+    fun selectedMood_addsDiary_andSendsMoodToStore() {
+        // Given：建立日記狀態物件
+        val diaryStore = FakeDiaryStore()
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+
+        // When：先選擇專注，再從 public saveDiary 新增日記
+        viewModel.updateDraftMood(Mood.FOCUSED)
+        viewModel.saveDiary("旅行", "今天很專注")
+
+        // Then：確認新增日記與 fake storage 收到的日記都是專注
+        assertEquals(Mood.FOCUSED, viewModel.entries.first().mood)
+        assertEquals(Mood.FOCUSED, diaryStore.savedEntries?.first()?.mood)
+    }
+
+    @Test
     fun emptyStore_keepsEntriesEmpty() {
         // Given：建立一個 load 回傳既有空清單的 fake storage
         val diaryStore = FakeDiaryStore(initialEntries = emptyList())

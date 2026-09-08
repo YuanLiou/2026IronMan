@@ -30,6 +30,9 @@ class PhotoDiaryViewModel(
     )
         private set
 
+    var draftMood by mutableStateOf(Mood.CALM)
+        private set
+
     var validationError by mutableStateOf<String?>(null)
         private set
 
@@ -47,6 +50,10 @@ class PhotoDiaryViewModel(
 
     fun updateNote(note: String) {
         this.note = note
+    }
+
+    fun updateDraftMood(mood: Mood) {
+        draftMood = mood
     }
 
     fun selectExternalPhoto(uriString: String) {
@@ -67,7 +74,7 @@ class PhotoDiaryViewModel(
                 photo = draftPhoto,
                 title = normalizedTitle,
                 note = normalizedNote,
-                mood = Mood.CALM,
+                mood = draftMood,
                 createdAt = LocalDateTime.now()
             )
             val entryToSave: DiaryEntry
@@ -121,6 +128,7 @@ class PhotoDiaryViewModel(
         note = ""
         validationError = null
         draftPhoto = DiaryPhoto.BuiltIn(R.drawable.diary_default)
+        draftMood = Mood.CALM
     }
 
     private fun loadInitialEntries(): List<DiaryEntry> {

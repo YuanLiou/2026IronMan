@@ -23,10 +23,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clipToBounds
@@ -54,9 +60,11 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel) {
             title = viewModel.title,
             note = viewModel.note,
             photo = viewModel.draftPhoto,
+            mood = viewModel.draftMood,
             validationError = viewModel.validationError,
             onTitleChange = viewModel::updateTitle,
             onNoteChange = viewModel::updateNote,
+            onMoodChange = { selectedMood -> viewModel.updateDraftMood(selectedMood) },
             onSave = viewModel::saveDiary,
             onCancel = viewModel::cancelAddingDiary,
             onChoosePhoto = {
@@ -70,6 +78,15 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel) {
             entries = viewModel.getDisplayEntries(),
             onAddClick = viewModel::startAddingDiary,
             onDeleteDiary = { id -> viewModel.deleteDiary(id) },
+            onMoodChange = { diaryId, selectedMood ->
+                viewModel.entries = viewModel.entries.map { diaryEntry ->
+                    if (diaryEntry.id == diaryId) {
+                        diaryEntry.copy(mood = selectedMood)
+                    } else {
+                        diaryEntry
+                    }
+                }
+            },
             isNewestFirst = viewModel.isNewestFirst,
             onToggleSortOrder = { viewModel.toggleSortOrder() }
         )
@@ -81,6 +98,7 @@ private fun DiaryList(
     entries: List<DiaryEntry>,
     onAddClick: () -> Unit,
     onDeleteDiary: (String) -> Unit,
+    onMoodChange: (String, Mood) -> Unit,
     isNewestFirst: Boolean,
     onToggleSortOrder: () -> Unit
 ) {
@@ -121,7 +139,10 @@ private fun DiaryList(
             items(entries) { diaryEntry ->
                 DiaryCard(
                     entry = diaryEntry,
-                    onDeleteClick = { onDeleteDiary(diaryEntry.id) }
+                    onDeleteClick = { onDeleteDiary(diaryEntry.id) },
+                    onMoodChange = { selectedMood ->
+                        onMoodChange(diaryEntry.id, selectedMood)
+                    }
                 )
             }
         }
@@ -131,7 +152,8 @@ private fun DiaryList(
 @Composable
 private fun DiaryCard(
     entry: DiaryEntry,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onMoodChange: (Mood) -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column {
@@ -150,10 +172,12 @@ private fun DiaryCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = entry.note)
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(text = "心情：${entry.mood.displayName}")
-                    Text(text = "建立時間：${entry.createdAt.format(displayDateTimeFormatter)}")
-                }
+                MoodDropdown(
+                    selectedMood = entry.mood,
+                    onMoodSelected = onMoodChange
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "建立時間：${entry.createdAt.format(displayDateTimeFormatter)}")
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(onClick = { onDeleteClick() }) {
                     Text(text = "刪除")
@@ -168,9 +192,11 @@ private fun DiaryForm(
     title: String,
     note: String,
     photo: DiaryPhoto,
+    mood: Mood,
     validationError: String?,
     onTitleChange: (String) -> Unit,
     onNoteChange: (String) -> Unit,
+    onMoodChange: (Mood) -> Unit,
     onSave: (String, String) -> Unit,
     onCancel: () -> Unit,
     onChoosePhoto: () -> Unit
@@ -197,6 +223,10 @@ private fun DiaryForm(
         Button(onClick = { onChoosePhoto() }) {
             Text(text = "選擇照片")
         }
+        MoodDropdown(
+            selectedMood = mood,
+            onMoodSelected = onMoodChange
+        )
         OutlinedTextField(
             value = title,
             onValueChange = onTitleChange,
@@ -222,6 +252,36 @@ private fun DiaryForm(
             }
             Button(onClick = onCancel) {
                 Text(text = "取消")
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoodDropdown(
+    selectedMood: Mood,
+    onMoodSelected: (Mood) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        Button(
+            onClick = { expanded = true }
+        ) {
+            Text(text = "心情：${selectedMood.displayName}")
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            for (moodOption in Mood.entries) {
+                DropdownMenuItem(
+                    text = { Text(text = moodOption.displayName) },
+                    onClick = {
+                        expanded = false
+                        onMoodSelected(moodOption)
+                    }
+                )
             }
         }
     }
