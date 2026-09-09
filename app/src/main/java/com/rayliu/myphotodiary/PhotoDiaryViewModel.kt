@@ -42,6 +42,9 @@ class PhotoDiaryViewModel(
     var searchQuery by mutableStateOf("")
         private set
 
+    var selectedMoodFilter by mutableStateOf<Mood?>(null)
+        private set
+
     fun startAddingDiary() {
         clearForm()
         isAddingDiary = true
@@ -123,6 +126,10 @@ class PhotoDiaryViewModel(
         searchQuery = query
     }
 
+    fun updateMoodFilter(mood: Mood?) {
+        selectedMoodFilter = mood
+    }
+
     fun getDisplayEntries(): List<DiaryEntry> {
         val normalizedQuery = searchQuery.trim()
         val matchingEntries = if (normalizedQuery.isEmpty()) {
@@ -132,11 +139,19 @@ class PhotoDiaryViewModel(
                 diaryEntry.title.contains(normalizedQuery, ignoreCase = true)
             }
         }
+        val moodFilter = selectedMoodFilter
+        val moodMatchingEntries = if (moodFilter == null) {
+            matchingEntries
+        } else {
+            matchingEntries.filter { diaryEntry ->
+                diaryEntry.mood == moodFilter
+            }
+        }
 
         if (isNewestFirst) {
-            return matchingEntries.sortedByDescending { diaryEntry -> diaryEntry.createdAt }
+            return moodMatchingEntries.sortedByDescending { diaryEntry -> diaryEntry.createdAt }
         }
-        return matchingEntries
+        return moodMatchingEntries
     }
 
     private fun clearForm() {

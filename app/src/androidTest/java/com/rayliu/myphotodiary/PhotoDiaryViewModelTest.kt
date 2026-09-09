@@ -100,6 +100,26 @@ class PhotoDiaryViewModelTest {
     }
 
     @Test
+    fun searchAndMoodFilter_returnsMatchingMoodProjection_withoutChangingSourceEntries() {
+        // Given：建立兩篇標題都符合搜尋文字但心情不同的固定 ID 日記
+        val sourceEntries = listOf(
+            testEntry(id = "entry-1", title = "晨光散步", mood = Mood.CALM),
+            testEntry(id = "entry-2", title = "晨光閱讀", mood = Mood.FOCUSED)
+        )
+        val diaryStore = FakeDiaryStore(initialEntries = sourceEntries)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+
+        // When：先設定標題搜尋，再選擇專注心情並取得目前要顯示的日記
+        viewModel.updateSearchQuery("晨光")
+        viewModel.updateMoodFilter(Mood.FOCUSED)
+        val displayEntries = viewModel.getDisplayEntries()
+
+        // Then：只顯示同時符合兩個條件的原本 ID，來源清單仍維持原本內容
+        assertEquals(listOf("entry-2"), displayEntries.map { diaryEntry -> diaryEntry.id })
+        assertEquals(sourceEntries, viewModel.entries)
+    }
+
+    @Test
     fun emptyStore_keepsEntriesEmpty() {
         // Given：建立一個 load 回傳既有空清單的 fake storage
         val diaryStore = FakeDiaryStore(initialEntries = emptyList())
@@ -111,13 +131,13 @@ class PhotoDiaryViewModelTest {
         assertEquals(0, viewModel.entries.size)
     }
 
-    private fun testEntry(id: String, title: String): DiaryEntry {
+    private fun testEntry(id: String, title: String, mood: Mood = Mood.CALM): DiaryEntry {
         return DiaryEntry(
             id = id,
             photo = DiaryPhoto.BuiltIn(R.drawable.diary_default),
             title = title,
             note = "測試內容",
-            mood = Mood.CALM,
+            mood = mood,
             createdAt = LocalDateTime.parse("2026-01-01T12:00:00")
         )
     }
