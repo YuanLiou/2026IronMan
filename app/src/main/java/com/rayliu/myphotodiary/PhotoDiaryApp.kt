@@ -76,6 +76,8 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel) {
     } else {
         DiaryList(
             entries = viewModel.getDisplayEntries(),
+            searchQuery = viewModel.searchQuery,
+            onSearchQueryChange = { query -> viewModel.updateSearchQuery(query) },
             onAddClick = viewModel::startAddingDiary,
             onDeleteDiary = { id -> viewModel.deleteDiary(id) },
             onMoodChange = { diaryId, selectedMood ->
@@ -96,6 +98,8 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel) {
 @Composable
 private fun DiaryList(
     entries: List<DiaryEntry>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     onAddClick: () -> Unit,
     onDeleteDiary: (String) -> Unit,
     onMoodChange: (String, Mood) -> Unit,
@@ -131,6 +135,13 @@ private fun DiaryList(
                 Text(text = "目前：原始順序（切換為最新在前）")
             }
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { query -> onSearchQueryChange(query) },
+            label = { Text(text = "搜尋標題") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(modifier = Modifier.height(16.dp))
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),

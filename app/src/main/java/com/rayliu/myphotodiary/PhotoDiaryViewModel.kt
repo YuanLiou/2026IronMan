@@ -39,6 +39,9 @@ class PhotoDiaryViewModel(
     var isNewestFirst by mutableStateOf(false)
         private set
 
+    var searchQuery by mutableStateOf("")
+        private set
+
     fun startAddingDiary() {
         clearForm()
         isAddingDiary = true
@@ -116,11 +119,24 @@ class PhotoDiaryViewModel(
         isNewestFirst = !isNewestFirst
     }
 
+    fun updateSearchQuery(query: String) {
+        searchQuery = query
+    }
+
     fun getDisplayEntries(): List<DiaryEntry> {
-        if (isNewestFirst) {
-            return entries.sortedByDescending { diaryEntry -> diaryEntry.createdAt }
+        val normalizedQuery = searchQuery.trim()
+        val matchingEntries = if (normalizedQuery.isEmpty()) {
+            entries
+        } else {
+            entries.filter { diaryEntry ->
+                diaryEntry.title.contains(normalizedQuery, ignoreCase = true)
+            }
         }
-        return entries
+
+        if (isNewestFirst) {
+            return matchingEntries.sortedByDescending { diaryEntry -> diaryEntry.createdAt }
+        }
+        return matchingEntries
     }
 
     private fun clearForm() {

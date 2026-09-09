@@ -7,6 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.LocalDateTime
 
 @RunWith(AndroidJUnit4::class)
 class PhotoDiaryViewModelTest {
@@ -80,6 +81,25 @@ class PhotoDiaryViewModelTest {
     }
 
     @Test
+    fun searchQuery_returnsTitleMatchingProjection_withoutChangingSourceEntries() {
+        // Given：建立兩篇具有固定 ID 與不同標題的來源日記
+        val sourceEntries = listOf(
+            testEntry(id = "entry-1", title = "晨光散步"),
+            testEntry(id = "entry-2", title = "夜色閱讀")
+        )
+        val diaryStore = FakeDiaryStore(initialEntries = sourceEntries)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+
+        // When：更新搜尋文字，再取得目前要顯示的日記
+        viewModel.updateSearchQuery("  晨光  ")
+        val displayEntries = viewModel.getDisplayEntries()
+
+        // Then：只顯示符合標題的 ID，來源清單仍維持原本內容
+        assertEquals(listOf("entry-1"), displayEntries.map { diaryEntry -> diaryEntry.id })
+        assertEquals(sourceEntries, viewModel.entries)
+    }
+
+    @Test
     fun emptyStore_keepsEntriesEmpty() {
         // Given：建立一個 load 回傳既有空清單的 fake storage
         val diaryStore = FakeDiaryStore(initialEntries = emptyList())
@@ -89,6 +109,17 @@ class PhotoDiaryViewModelTest {
 
         // Then：確認 ViewModel 保留空清單，不改用 sample entries
         assertEquals(0, viewModel.entries.size)
+    }
+
+    private fun testEntry(id: String, title: String): DiaryEntry {
+        return DiaryEntry(
+            id = id,
+            photo = DiaryPhoto.BuiltIn(R.drawable.diary_default),
+            title = title,
+            note = "測試內容",
+            mood = Mood.CALM,
+            createdAt = LocalDateTime.parse("2026-01-01T12:00:00")
+        )
     }
 
     private fun application(): Application {
