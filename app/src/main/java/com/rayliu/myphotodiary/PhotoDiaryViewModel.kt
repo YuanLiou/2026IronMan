@@ -9,7 +9,8 @@ import java.time.LocalDateTime
 
 class PhotoDiaryViewModel(
     application: Application,
-    private val diaryStore: DiaryStore
+    private val diaryStore: DiaryStore,
+    private val displayEntriesProvider: DisplayEntriesProvider
 ) : AndroidViewModel(application) {
     private val photoStore = LocalPhotoStore(application.applicationContext)
     private val diaryValidator = DiaryValidator()
@@ -37,6 +38,12 @@ class PhotoDiaryViewModel(
         private set
 
     var isNewestFirst by mutableStateOf(false)
+        private set
+
+    var searchQuery by mutableStateOf("")
+        private set
+
+    var selectedMoodFilter by mutableStateOf<Mood?>(null)
         private set
 
     fun startAddingDiary() {
@@ -116,11 +123,21 @@ class PhotoDiaryViewModel(
         isNewestFirst = !isNewestFirst
     }
 
+    fun updateSearchQuery(query: String) {
+        searchQuery = query
+    }
+
+    fun updateMoodFilter(mood: Mood?) {
+        selectedMoodFilter = mood
+    }
+
     fun getDisplayEntries(): List<DiaryEntry> {
-        if (isNewestFirst) {
-            return entries.sortedByDescending { diaryEntry -> diaryEntry.createdAt }
-        }
-        return entries
+        return displayEntriesProvider.getDisplayEntries(
+            sourceEntries = entries,
+            searchQuery = searchQuery,
+            selectedMoodFilter = selectedMoodFilter,
+            isNewestFirst = isNewestFirst
+        )
     }
 
     private fun clearForm() {

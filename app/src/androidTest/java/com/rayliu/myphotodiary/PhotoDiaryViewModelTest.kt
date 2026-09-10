@@ -7,6 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.time.LocalDateTime
 
 @RunWith(AndroidJUnit4::class)
 class PhotoDiaryViewModelTest {
@@ -14,7 +15,7 @@ class PhotoDiaryViewModelTest {
     fun bothBlank_doesNotAddDiary_andShowsValidationError() {
         // Given：建立日記狀態物件，並記錄目前已有幾篇日記
         val diaryStore = FakeDiaryStore()
-        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore, DisplayEntriesUseCase())
         val initialEntryCount = viewModel.entries.size
 
         // When：從 public saveDiary 傳入兩個都只有空白的欄位
@@ -30,7 +31,7 @@ class PhotoDiaryViewModelTest {
     fun titleOnly_trimsValues_andAddsDiary() {
         // Given：建立日記狀態物件，並記錄目前已有幾篇日記
         val diaryStore = FakeDiaryStore()
-        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore, DisplayEntriesUseCase())
         val initialEntryCount = viewModel.entries.size
 
         // When：從 public saveDiary 傳入前後有空白的標題，內容只有空白
@@ -49,7 +50,7 @@ class PhotoDiaryViewModelTest {
     fun noteOnly_trimsValues_andAddsDiary() {
         // Given：建立日記狀態物件，並記錄目前已有幾篇日記
         val diaryStore = FakeDiaryStore()
-        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore, DisplayEntriesUseCase())
         val initialEntryCount = viewModel.entries.size
 
         // When：從 public saveDiary 傳入只有空白的標題與前後有空白的內容
@@ -68,7 +69,7 @@ class PhotoDiaryViewModelTest {
     fun selectedMood_addsDiary_andSendsMoodToStore() {
         // Given：建立日記狀態物件
         val diaryStore = FakeDiaryStore()
-        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore, DisplayEntriesUseCase())
 
         // When：先選擇專注，再從 public saveDiary 新增日記
         viewModel.updateDraftMood(Mood.FOCUSED)
@@ -80,15 +81,65 @@ class PhotoDiaryViewModelTest {
     }
 
     @Test
+    fun searchQuery_returnsTitleMatchingProjection_withoutChangingSourceEntries() {
+        // Given：建立兩篇具有固定 ID 與不同標題的來源日記
+        val sourceEntries = listOf(
+            testEntry(id = "entry-1", title = "晨光散步"),
+            testEntry(id = "entry-2", title = "夜色閱讀")
+        )
+        val diaryStore = FakeDiaryStore(initialEntries = sourceEntries)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore, DisplayEntriesUseCase())
+
+        // When：更新搜尋文字，再取得目前要顯示的日記
+        viewModel.updateSearchQuery("  晨光  ")
+        val displayEntries = viewModel.getDisplayEntries()
+
+        // Then：只顯示符合標題的 ID，來源清單仍維持原本內容
+        assertEquals(listOf("entry-1"), displayEntries.map { diaryEntry -> diaryEntry.id })
+        assertEquals(sourceEntries, viewModel.entries)
+    }
+
+    @Test
+    fun searchAndMoodFilter_returnsMatchingMoodProjection_withoutChangingSourceEntries() {
+        // Given：建立兩篇標題都符合搜尋文字但心情不同的固定 ID 日記
+        val sourceEntries = listOf(
+            testEntry(id = "entry-1", title = "晨光散步", mood = Mood.CALM),
+            testEntry(id = "entry-2", title = "晨光閱讀", mood = Mood.FOCUSED)
+        )
+        val diaryStore = FakeDiaryStore(initialEntries = sourceEntries)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore, DisplayEntriesUseCase())
+
+        // When：先設定標題搜尋，再選擇專注心情並取得目前要顯示的日記
+        viewModel.updateSearchQuery("晨光")
+        viewModel.updateMoodFilter(Mood.FOCUSED)
+        val displayEntries = viewModel.getDisplayEntries()
+
+        // Then：只顯示同時符合兩個條件的原本 ID，來源清單仍維持原本內容
+        assertEquals(listOf("entry-2"), displayEntries.map { diaryEntry -> diaryEntry.id })
+        assertEquals(sourceEntries, viewModel.entries)
+    }
+
+    @Test
     fun emptyStore_keepsEntriesEmpty() {
         // Given：建立一個 load 回傳既有空清單的 fake storage
         val diaryStore = FakeDiaryStore(initialEntries = emptyList())
 
         // When：把 fake storage 傳入 ViewModel constructor
-        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore, DisplayEntriesUseCase())
 
         // Then：確認 ViewModel 保留空清單，不改用 sample entries
         assertEquals(0, viewModel.entries.size)
+    }
+
+    private fun testEntry(id: String, title: String, mood: Mood = Mood.CALM): DiaryEntry {
+        return DiaryEntry(
+            id = id,
+            photo = DiaryPhoto.BuiltIn(R.drawable.diary_default),
+            title = title,
+            note = "測試內容",
+            mood = mood,
+            createdAt = LocalDateTime.parse("2026-01-01T12:00:00")
+        )
     }
 
     private fun application(): Application {

@@ -76,6 +76,10 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel) {
     } else {
         DiaryList(
             entries = viewModel.getDisplayEntries(),
+            searchQuery = viewModel.searchQuery,
+            onSearchQueryChange = { query -> viewModel.updateSearchQuery(query) },
+            selectedMoodFilter = viewModel.selectedMoodFilter,
+            onMoodFilterChange = { mood -> viewModel.updateMoodFilter(mood) },
             onAddClick = viewModel::startAddingDiary,
             onDeleteDiary = { id -> viewModel.deleteDiary(id) },
             onMoodChange = { diaryId, selectedMood ->
@@ -96,6 +100,10 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel) {
 @Composable
 private fun DiaryList(
     entries: List<DiaryEntry>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    selectedMoodFilter: Mood?,
+    onMoodFilterChange: (Mood?) -> Unit,
     onAddClick: () -> Unit,
     onDeleteDiary: (String) -> Unit,
     onMoodChange: (String, Mood) -> Unit,
@@ -132,6 +140,18 @@ private fun DiaryList(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { query -> onSearchQueryChange(query) },
+            label = { Text(text = "搜尋標題") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        MoodFilterDropdown(
+            selectedMoodFilter = selectedMoodFilter,
+            onMoodFilterChange = { mood -> onMoodFilterChange(mood) }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -142,6 +162,48 @@ private fun DiaryList(
                     onDeleteClick = { onDeleteDiary(diaryEntry.id) },
                     onMoodChange = { selectedMood ->
                         onMoodChange(diaryEntry.id, selectedMood)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoodFilterDropdown(
+    selectedMoodFilter: Mood?,
+    onMoodFilterChange: (Mood?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selectedMoodLabel = if (selectedMoodFilter == null) {
+        "全部"
+    } else {
+        selectedMoodFilter.displayName
+    }
+
+    Box {
+        Button(
+            onClick = { expanded = true }
+        ) {
+            Text(text = "篩選心情：$selectedMoodLabel")
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(text = "全部") },
+                onClick = {
+                    expanded = false
+                    onMoodFilterChange(null)
+                }
+            )
+            for (moodOption in Mood.entries) {
+                DropdownMenuItem(
+                    text = { Text(text = moodOption.displayName) },
+                    onClick = {
+                        expanded = false
+                        onMoodFilterChange(moodOption)
                     }
                 )
             }

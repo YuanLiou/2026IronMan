@@ -10,7 +10,8 @@ import com.rayliu.myphotodiary.ui.theme.MyPhotoDiaryTheme
 class MainActivity : ComponentActivity() {
     private val photoDiaryViewModel: PhotoDiaryViewModel by viewModels {
         val diaryStore = LocalDiaryStorage(applicationContext)
-        PhotoDiaryViewModelFactory(diaryStore)
+        val displayEntriesProvider = DisplayEntriesUseCase()
+        PhotoDiaryViewModelFactory(diaryStore, displayEntriesProvider)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
