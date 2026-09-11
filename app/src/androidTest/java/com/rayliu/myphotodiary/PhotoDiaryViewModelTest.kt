@@ -120,7 +120,7 @@ class PhotoDiaryViewModelTest {
     }
 
     @Test
-    fun updateMood_changesTargetByStableId_preservesOtherEntriesAndDoesNotSave() {
+    fun updateMood_persistsUpdatedMood_whenNewViewModelReloads() {
         // Given：建立兩篇固定 ID、心情不同且順序固定的來源日記
         val targetEntry = testEntry(
             id = "entry-target",
@@ -139,13 +139,20 @@ class PhotoDiaryViewModelTest {
         // When：透過 public updateMood 以 target 的 stable ID 改變心情
         viewModel.updateMood("entry-target", Mood.FOCUSED)
 
-        // Then：確認 target 保留 ID 並更新心情，其他日記完整值與順序不變，且沒有保存
+        // Then：確認 target 保留 ID 並更新心情，其他日記完整值與順序不變，且保存一次
         assertEquals(otherEntry, viewModel.entries[0])
         assertEquals("entry-target", viewModel.entries[1].id)
         assertEquals(Mood.FOCUSED, viewModel.entries[1].mood)
         assertEquals(targetEntry.copy(mood = Mood.FOCUSED), viewModel.entries[1])
         assertEquals(listOf("entry-other", "entry-target"), viewModel.entries.map { diaryEntry -> diaryEntry.id })
-        assertEquals(0, diaryStore.saveCallCount)
+        assertEquals(1, diaryStore.saveCallCount)
+
+        // When：再以同一個 FakeDiaryStore 建立第二個 ViewModel，讓它重新載入保存後的日記
+        val reloadedViewModel = PhotoDiaryViewModel(application(), diaryStore)
+
+        // Then：確認重新載入後仍保有 target 的同一 ID 與新心情
+        assertEquals(targetEntry.copy(mood = Mood.FOCUSED), reloadedViewModel.entries[1])
+        assertEquals(listOf("entry-other", "entry-target"), reloadedViewModel.entries.map { diaryEntry -> diaryEntry.id })
     }
 
     @Test
@@ -180,6 +187,8 @@ class PhotoDiaryViewModelTest {
 private class FakeDiaryStore(
     private val initialEntries: List<DiaryEntry>? = null
 ) : DiaryStore {
+    private var currentEntries: List<DiaryEntry>? = initialEntries
+
     var savedEntries: List<DiaryEntry>? = null
         private set
 
@@ -187,10 +196,11 @@ private class FakeDiaryStore(
         private set
 
     override fun load(): List<DiaryEntry>? {
-        return initialEntries
+        return currentEntries
     }
 
     override fun save(entries: List<DiaryEntry>) {
+        currentEntries = entries
         savedEntries = entries
         saveCallCount += 1
     }
