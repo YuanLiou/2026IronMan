@@ -128,6 +128,7 @@ class PhotoDiaryViewModel(
             }
         }
         entries = updatedEntries
+        diaryStore.save(entries)
     }
 
     fun toggleSortOrder() {
