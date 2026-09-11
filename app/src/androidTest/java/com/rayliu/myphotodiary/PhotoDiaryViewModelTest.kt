@@ -120,6 +120,35 @@ class PhotoDiaryViewModelTest {
     }
 
     @Test
+    fun updateMood_changesTargetByStableId_preservesOtherEntriesAndDoesNotSave() {
+        // Given：建立兩篇固定 ID、心情不同且順序固定的來源日記
+        val targetEntry = testEntry(
+            id = "entry-target",
+            title = "目標日記",
+            mood = Mood.CALM
+        )
+        val otherEntry = testEntry(
+            id = "entry-other",
+            title = "其他日記",
+            mood = Mood.IMPRESSED
+        )
+        val sourceEntries = listOf(otherEntry, targetEntry)
+        val diaryStore = FakeDiaryStore(initialEntries = sourceEntries)
+        val viewModel = PhotoDiaryViewModel(application(), diaryStore)
+
+        // When：透過 public updateMood 以 target 的 stable ID 改變心情
+        viewModel.updateMood("entry-target", Mood.FOCUSED)
+
+        // Then：確認 target 保留 ID 並更新心情，其他日記完整值與順序不變，且沒有保存
+        assertEquals(otherEntry, viewModel.entries[0])
+        assertEquals("entry-target", viewModel.entries[1].id)
+        assertEquals(Mood.FOCUSED, viewModel.entries[1].mood)
+        assertEquals(targetEntry.copy(mood = Mood.FOCUSED), viewModel.entries[1])
+        assertEquals(listOf("entry-other", "entry-target"), viewModel.entries.map { diaryEntry -> diaryEntry.id })
+        assertEquals(0, diaryStore.saveCallCount)
+    }
+
+    @Test
     fun emptyStore_keepsEntriesEmpty() {
         // Given：建立一個 load 回傳既有空清單的 fake storage
         val diaryStore = FakeDiaryStore(initialEntries = emptyList())

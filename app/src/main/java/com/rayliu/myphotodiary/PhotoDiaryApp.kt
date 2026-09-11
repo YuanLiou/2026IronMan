@@ -83,13 +83,7 @@ fun PhotoDiaryApp(viewModel: PhotoDiaryViewModel) {
             onAddClick = viewModel::startAddingDiary,
             onDeleteDiary = { id -> viewModel.deleteDiary(id) },
             onMoodChange = { diaryId, selectedMood ->
-                viewModel.entries = viewModel.entries.map { diaryEntry ->
-                    if (diaryEntry.id == diaryId) {
-                        diaryEntry.copy(mood = selectedMood)
-                    } else {
-                        diaryEntry
-                    }
-                }
+                viewModel.updateMood(diaryId, selectedMood)
             },
             isNewestFirst = viewModel.isNewestFirst,
             onToggleSortOrder = { viewModel.toggleSortOrder() }

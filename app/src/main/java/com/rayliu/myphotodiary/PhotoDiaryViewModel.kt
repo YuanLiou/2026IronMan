@@ -15,6 +15,7 @@ class PhotoDiaryViewModel(
     private val diaryValidator = DiaryValidator()
 
     var entries by mutableStateOf(loadInitialEntries())
+        private set
 
     var isAddingDiary by mutableStateOf(false)
         private set
@@ -116,6 +117,17 @@ class PhotoDiaryViewModel(
         if (wasDeleted) {
             diaryStore.save(entries)
         }
+    }
+
+    fun updateMood(id: String, mood: Mood) {
+        val updatedEntries = entries.map { diaryEntry ->
+            if (diaryEntry.id == id) {
+                diaryEntry.copy(mood = mood)
+            } else {
+                diaryEntry
+            }
+        }
+        entries = updatedEntries
     }
 
     fun toggleSortOrder() {
